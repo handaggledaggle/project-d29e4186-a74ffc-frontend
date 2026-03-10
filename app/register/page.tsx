@@ -45,6 +45,7 @@ export default function RegisterPage() {
 
     try {
       // 백엔드 API 규칙에 맞춰 /api/v1/auth/register 호출
+      // Ensure we send display_name (snake_case) as backend accepts it.
       const res = await apiFetch<{ user_id?: string; message?: string }>(
         "/api/v1/auth/register",
         {

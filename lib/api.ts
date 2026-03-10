@@ -13,7 +13,11 @@ function getApiBaseUrl() {
 }
 
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<ApiResult<T>> {
-  const url = `${getApiBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+  // Ensure path always starts with /api/v1 when calling backend endpoints that use that prefix.
+  // If caller provided a full URL, don't prepend base.
+  const isFullUrl = /^https?:\/\//i.test(path);
+  const base = getApiBaseUrl();
+  const url = isFullUrl ? path : `${base}${path.startsWith("/") ? path : `/${path}`}`;
 
   const headers = new Headers(options.headers);
   if (options.body !== undefined && !(options.body instanceof FormData)) {

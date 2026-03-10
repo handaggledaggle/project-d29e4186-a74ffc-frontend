@@ -19,8 +19,9 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await apiFetch<{ accessToken: string; refreshToken?: string }>(
-        "/auth/login",
+      // Note: backend controllers are under /api/v1/auth (see backend)
+      const res = await apiFetch<{ access_token?: string; refresh_token?: string }>(
+        "/api/v1/auth/login",
         {
           method: "POST",
           body: { email, password },
@@ -33,19 +34,20 @@ export default function LoginPage() {
         return;
       }
 
-      // 서버가 쿠키에 토큰을 설정해주는 경우(권장)엔 클라이언트 저장 불필요.
-      // 여기서는 응답에 토큰이 있으면 로컬스토리지에 보관하고 홈으로 이동.
       const data = res.data;
-      if (data?.accessToken) {
+      // backend returns snake_case keys: access_token, refresh_token
+      const accessToken = (data as any)?.access_token ?? (data as any)?.accessToken;
+      const refreshToken = (data as any)?.refresh_token ?? (data as any)?.refreshToken;
+
+      if (accessToken) {
         try {
-          localStorage.setItem("pt_access_token", data.accessToken);
-          if (data.refreshToken) localStorage.setItem("pt_refresh_token", data.refreshToken);
+          localStorage.setItem("pt_access_token", accessToken);
+          if (refreshToken) localStorage.setItem("pt_refresh_token", refreshToken);
         } catch {
-          // ignore storage errors
+          // ignore
         }
       }
 
-      // 리다이렉트 또는 페이지 새로고침
       router.push("/");
     } catch (err) {
       setError("네트워크 오류가 발생했습니다");

@@ -13,8 +13,7 @@ function getApiBaseUrl() {
 }
 
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<ApiResult<T>> {
-  // Ensure path always starts with /api/v1 when calling backend endpoints that use that prefix.
-  // If caller provided a full URL, don't prepend base.
+  // If caller provided a full URL, don't prepend base. Otherwise use base + path.
   const isFullUrl = /^https?:\/\//i.test(path);
   const base = getApiBaseUrl();
   const url = isFullUrl ? path : `${base}${path.startsWith("/") ? path : `/${path}`}`;
@@ -27,6 +26,7 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   const res = await fetch(url, {
     ...options,
     headers,
+    // Next.js on the client requires the body to be string for JSON requests
     body:
       options.body === undefined
         ? undefined

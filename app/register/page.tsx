@@ -19,12 +19,31 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
 
+    // 간단한 클라이언트 유효성 검사
+    if (!displayName.trim()) {
+      setError("이름을 입력해주세요");
+      setLoading(false);
+      return;
+    }
+    if (!email.trim()) {
+      setError("이메일을 입력해주세요");
+      setLoading(false);
+      return;
+    }
+    if (password.length < 8) {
+      setError("비밀번호는 8자 이상이어야 합니다");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await apiFetch<{ id?: string; message?: string }>(
-        "/auth/register",
+      // 백엔드 API 규칙: 기존 컨트롤러 경로가 /api/v1/auth/* 형태라면 그에 맞춰 호출
+      // 대외 환경 변수로도 커버되도록 lib/api.getApiBaseUrl()에서 베이스 URL을 사용
+      const res = await apiFetch<{ user_id?: string; message?: string }>(
+        "/api/v1/auth/register",
         {
           method: "POST",
-          body: { email, password, displayName },
+          body: { email, password, display_name: displayName },
         }
       );
 
@@ -34,7 +53,7 @@ export default function RegisterPage() {
         return;
       }
 
-      // 성공 시 로그인 페이지로 이동하거나 홈으로 이동
+      // 성공 시 로그인 페이지로 이동
       router.push("/login");
     } catch (err) {
       setError("네트워크 오류가 발생했습니다");

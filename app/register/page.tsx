@@ -1,0 +1,98 @@
+"use client";
+
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { apiFetch } from "@/lib/api";
+
+export default function RegisterPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const res = await apiFetch<{ id?: string; message?: string }>(
+        "/auth/register",
+        {
+          method: "POST",
+          body: { email, password, displayName },
+        }
+      );
+
+      if (!res.ok) {
+        setError(res.error?.message ?? "회원가입에 실패했습니다");
+        setLoading(false);
+        return;
+      }
+
+      // 성공 시 로그인 페이지로 이동하거나 홈으로 이동
+      router.push("/login");
+    } catch (err) {
+      setError("네트워크 오류가 발생했습니다");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="mx-auto max-w-md px-4 py-12">
+      <h1 className="text-2xl font-bold mb-4">회원가입</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">이름</label>
+          <Input
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="예: 홍길동"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">이메일</label>
+          <Input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">비밀번호</label>
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="비밀번호 (8자 이상 권장)"
+            required
+            minLength={8}
+          />
+        </div>
+
+        {error ? <div className="text-sm text-destructive">{error}</div> : null}
+
+        <div className="flex items-center justify-between gap-2">
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "가입 처리중..." : "회원가입"}
+          </Button>
+        </div>
+      </form>
+
+      <div className="mt-6 text-sm text-muted-foreground">
+        이미 계정이 있으신가요? <a href="/login" className="text-primary underline">로그인</a>
+      </div>
+    </main>
+  );
+}

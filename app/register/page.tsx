@@ -30,6 +30,13 @@ export default function RegisterPage() {
       setLoading(false);
       return;
     }
+    // 이메일 형식 최소 검사
+    const emailRe = /^\S+@\S+\.\S+$/;
+    if (!emailRe.test(email)) {
+      setError("유효한 이메일을 입력해주세요");
+      setLoading(false);
+      return;
+    }
     if (password.length < 8) {
       setError("비밀번호는 8자 이상이어야 합니다");
       setLoading(false);
@@ -37,8 +44,7 @@ export default function RegisterPage() {
     }
 
     try {
-      // 백엔드 API 규칙: 기존 컨트롤러 경로가 /api/v1/auth/* 형태라면 그에 맞춰 호출
-      // 대외 환경 변수로도 커버되도록 lib/api.getApiBaseUrl()에서 베이스 URL을 사용
+      // 백엔드 API 규칙에 맞춰 /api/v1/auth/register 호출
       const res = await apiFetch<{ user_id?: string; message?: string }>(
         "/api/v1/auth/register",
         {
@@ -48,6 +54,7 @@ export default function RegisterPage() {
       );
 
       if (!res.ok) {
+        // backend가 message 필드를 반환하는 경우를 우선 사용
         setError(res.error?.message ?? "회원가입에 실패했습니다");
         setLoading(false);
         return;
@@ -56,6 +63,7 @@ export default function RegisterPage() {
       // 성공 시 로그인 페이지로 이동
       router.push("/login");
     } catch (err) {
+      console.error(err);
       setError("네트워크 오류가 발생했습니다");
     } finally {
       setLoading(false);
@@ -74,6 +82,7 @@ export default function RegisterPage() {
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="예: 홍길동"
             required
+            aria-label="display-name"
           />
         </div>
 
@@ -85,6 +94,7 @@ export default function RegisterPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             required
+            aria-label="email"
           />
         </div>
 
@@ -97,6 +107,7 @@ export default function RegisterPage() {
             placeholder="비밀번호 (8자 이상 권장)"
             required
             minLength={8}
+            aria-label="password"
           />
         </div>
 
@@ -111,6 +122,10 @@ export default function RegisterPage() {
 
       <div className="mt-6 text-sm text-muted-foreground">
         이미 계정이 있으신가요? <a href="/login" className="text-primary underline">로그인</a>
+      </div>
+
+      <div className="mt-4 text-xs text-muted-foreground">
+        참고: 서버 주소는 환경변수 NEXT_PUBLIC_API_BASE_URL 또는 기본 백엔드 URL을 사용합니다.
       </div>
     </main>
   );

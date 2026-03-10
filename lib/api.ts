@@ -5,8 +5,8 @@ export type ApiFetchOptions = Omit<RequestInit, "body"> & {
 };
 
 function getApiBaseUrl() {
-  // 기본: same-origin (Next Route Handler / reverse proxy)
-  // NEXT_PUBLIC_API_BASE_URL이 설정되어 있으면 해당 값을 사용
+  // 기본: NEXT_PUBLIC_API_BASE_URL이 설정되어 있으면 해당 값을 사용
+  // 없으면 제공된 백엔드 URL을 기본으로 사용
   const base = process.env.NEXT_PUBLIC_API_BASE_URL || "https://backend-production-cdc4.up.railway.app";
   if (!base) return "";
   return base.replace(/\/+$/, "");

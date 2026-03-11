@@ -1,4 +1,4 @@
-import "use client";
+"use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -39,6 +39,18 @@ export function AppHeader({ className, isAuthenticated, displayName }: AppHeader
     }
   }, [isAuthenticated]);
 
+  // Add an effect to update displayName from localStorage (if provided by login flow)
+  const [name, setName] = React.useState<string | undefined>(displayName);
+  React.useEffect(() => {
+    try {
+      const stored = typeof window !== "undefined" ? window.localStorage.getItem("pt_display_name") : null;
+      if (typeof displayName === "string") setName(displayName);
+      else if (stored) setName(stored);
+    } catch {
+      // ignore
+    }
+  }, [displayName]);
+
   // Logout handler: remove tokens and redirect to home (or login)
   function handleLogout(e?: React.MouseEvent) {
     if (e) e.preventDefault();
@@ -46,11 +58,13 @@ export function AppHeader({ className, isAuthenticated, displayName }: AppHeader
       if (typeof window !== "undefined") {
         window.localStorage.removeItem("pt_access_token");
         window.localStorage.removeItem("pt_refresh_token");
+        window.localStorage.removeItem("pt_display_name");
       }
     } catch {
       // ignore
     }
     setAuthed(false);
+    setName(undefined);
     // navigate to home
     router.push("/");
   }
@@ -60,6 +74,9 @@ export function AppHeader({ className, isAuthenticated, displayName }: AppHeader
     function onStorage(e: StorageEvent) {
       if (e.key === "pt_access_token") {
         setAuthed(!!e.newValue);
+      }
+      if (e.key === "pt_display_name") {
+        setName(e.newValue ?? undefined);
       }
     }
     if (typeof window !== "undefined") {
@@ -91,9 +108,9 @@ export function AppHeader({ className, isAuthenticated, displayName }: AppHeader
         <div className="flex items-center gap-2">
           {authed ? (
             <>
-              {displayName ? (
+              {name ? (
                 <span className="hidden text-sm font-medium text-[color:var(--color-foreground)]/80 sm:inline">
-                  {displayName}님
+                  {name}님
                 </span>
               ) : null}
               <Button variant="outline" asChild>

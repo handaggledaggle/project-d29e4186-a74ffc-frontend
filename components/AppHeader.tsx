@@ -114,19 +114,19 @@ export function AppHeader({ className, isAuthenticated, displayName }: AppHeader
                 </span>
               ) : null}
               <Button variant="outline" asChild>
-                <Link href="/mypage">마이페이지</Link>
+                <Link href="/mypage">My Page</Link>
               </Button>
               <Button onClick={handleLogout} variant="ghost">
-                로그아웃
+                Logout
               </Button>
             </>
           ) : (
             <>
               <Button variant="outline" asChild>
-                <Link href="/login">로그인</Link>
+                <Link href="/login">Login</Link>
               </Button>
               <Button asChild>
-                <Link href="/register">회원가입</Link>
+                <Link href="/register">Sign up</Link>
               </Button>
             </>
           )}

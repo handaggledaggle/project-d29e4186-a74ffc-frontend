@@ -55,6 +55,7 @@ export default function ArtworkCreateClient() {
         setLoading(true);
         setError(null);
 
+        // Ensure correct API prefix used: /api/v1/artworks
         const res = await apiFetch<ArtworkCreateResponse>(`/api/v1/artworks`, {
           method: "POST",
           body: form,
@@ -66,7 +67,7 @@ export default function ArtworkCreateClient() {
         }
 
         // Navigate to newly created artwork detail page if artwork_id returned
-        const artworkId = res.data.artwork_id;
+        const artworkId = res.data && (res.data as any).artwork_id;
         if (artworkId) {
           // router from next/navigation works in client components
           router.push(`/artworks/${encodeURIComponent(String(artworkId))}`);

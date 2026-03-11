@@ -27,54 +27,63 @@ export default function ArtworkCreateClient() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  // Ensure onSubmit is stable reference (optional) and properly called by form's onSubmit
+  const onSubmit = React.useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setError(null);
 
-    // basic validation
-    if (!title || !price) {
-      setError("작품명과 가격은 필수입니다.");
-      return;
-    }
-
-    const form = new FormData();
-    form.append("title", title);
-    form.append("category", category);
-    form.append("price", String(price));
-    if (description) form.append("description", description);
-    if (typeof quantity === "number") form.append("quantity", String(quantity));
-
-    // Append files (API expects multipart/form-data)
-    files.slice(0, 10).forEach((f, i) => {
-      form.append("files", f, f.name);
-    });
-
-    try {
-      setLoading(true);
-      const res = await apiFetch<ArtworkCreateResponse>(`/api/v1/artworks`, {
-        method: "POST",
-        body: form,
-      });
-
-      if (!res.ok) {
-        setError(res.error.message || "등록에 실패했습니다.");
+      // basic validation
+      if (!title || !price) {
+        setError("작품명과 가격은 필수입니다.");
         return;
       }
 
-      // Navigate to newly created artwork detail page if artwork_id returned
-      const artworkId = res.data.artwork_id;
-      if (artworkId) {
-        // router from next/navigation works in client components
-        router.push(`/artworks/${encodeURIComponent(String(artworkId))}`);
+      const form = new FormData();
+      form.append("title", title);
+      form.append("category", category);
+      form.append("price", String(price));
+      if (description) form.append("description", description);
+      if (typeof quantity === "number") form.append("quantity", String(quantity));
+
+      // Append files (API expects multipart/form-data)
+      files.slice(0, 10).forEach((f, i) => {
+        form.append("files", f, f.name);
+      });
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const res = await apiFetch<ArtworkCreateResponse>(`/api/v1/artworks`, {
+          method: "POST",
+          body: form,
+        });
+
+        if (!res.ok) {
+          setError(res.error?.message || "등록에 실패했습니다.");
+          return;
+        }
+
+        // Navigate to newly created artwork detail page if artwork_id returned
+        const artworkId = res.data.artwork_id;
+        if (artworkId) {
+          // router from next/navigation works in client components
+          router.push(`/artworks/${encodeURIComponent(String(artworkId))}`);
+        } else {
+          // If backend returned 204 or no id, at least navigate to artworks list
+          router.push(`/artworks`);
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(err);
+        setError("서버와 통신 중 오류가 발생했습니다.");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(err);
-      setError("서버와 통신 중 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [title, category, description, price, quantity, files, router]
+  );
 
   return (
     <>
@@ -90,7 +99,8 @@ export default function ArtworkCreateClient() {
               "flex-1 p-8 bg-[#FFFFFF] border border-[#DDD6FE] rounded-none shadow-none"
             )}
           >
-            <form onSubmit={onSubmit} className="">
+            {/* Ensure form element uses the onSubmit handler and a proper name/role for accessibility */}
+            <form onSubmit={onSubmit} className="" noValidate>
               <h2 className="text-2xl font-bold text-[#4C1D95] mb-4">작품 정보</h2>
 
               <div className="flex flex-col gap-4">
@@ -303,6 +313,11 @@ export default function ArtworkCreateClient() {
                     type="button"
                     variant="secondary"
                     className="bg-[#FFFFFF] text-[#4C1D95] rounded-lg px-4 py-2 shadow-none hover:bg-[#FAF5FF]"
+                    onClick={() => {
+                      // ensure preview action is handled in client
+                      const el = document.querySelector('[data-section-type="gallery"]');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
                   >
                     미리보기 전체화면
                   </Button>
@@ -310,6 +325,7 @@ export default function ArtworkCreateClient() {
                     type="button"
                     variant="secondary"
                     className="bg-[#FFFFFF] text-[#4C1D95] rounded-lg px-4 py-2 shadow-none hover:bg-[#FAF5FF]"
+                    onClick={() => alert('공개 전 검토 기능은 준비 중입니다.')}
                   >
                     공개 전 검토
                   </Button>

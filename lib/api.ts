@@ -1,5 +1,5 @@
 import type { ApiError, ApiResult } from "@/types";
-import { getSessionTokens } from "./auth";
+import { getSessionTokens, getSessionTokensClient } from "./auth";
 
 export type ApiFetchOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
@@ -26,13 +26,21 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   // Try to attach Authorization header from cookies (access token) when available.
   // This supports both client-side calls and server-side client components (via lib/auth.getSessionTokens).
   try {
+    // Prefer server tokens when available. getSessionTokens throws in client, so catch and fallback.
     const tokens = await getSessionTokens();
     if (tokens?.accessToken) {
-      // Ensure standard Bearer format expected by backend guard
       headers.set("Authorization", `Bearer ${tokens.accessToken}`);
     }
   } catch {
-    // getSessionTokens may throw in pure client env; ignore and proceed.
+    // Fallback for client environment: read from localStorage-safe helper.
+    try {
+      const tokens = getSessionTokensClient();
+      if (tokens?.accessToken) {
+        headers.set("Authorization", `Bearer ${tokens.accessToken}`);
+      }
+    } catch {
+      // ignore
+    }
   }
 
   const fetchOptions: RequestInit = {

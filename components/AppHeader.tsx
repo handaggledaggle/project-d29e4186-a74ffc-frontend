@@ -26,6 +26,13 @@ export function AppHeader({ className, isAuthenticated, displayName }: AppHeader
         // 기존 프로젝트에서 사용하던 키에 맞춰 토큰 삭제
         localStorage.removeItem("pt_access_token");
         localStorage.removeItem("pt_refresh_token");
+        // 또한 세션 관련 쿠키나 다른 키가 있을 수 있으므로 예비 삭제
+        try {
+          sessionStorage.removeItem("pt_access_token");
+          sessionStorage.removeItem("pt_refresh_token");
+        } catch {
+          // ignore
+        }
       }
     } catch {
       // ignore

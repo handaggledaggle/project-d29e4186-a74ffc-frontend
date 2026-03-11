@@ -43,8 +43,7 @@ function fallbackArtwork(id: string): Artwork {
 export default async function ArtworkDetailPage({ params }: PageProps) {
   const { id } = await params;
 
-  // Adjusted to match backend controller path: /api/v1/artworks/:id
-  const result = await apiFetch<Artwork>(`/api/v1/artworks/${encodeURIComponent(id)}`, {
+  const result = await apiFetch<Artwork>(`/api/artworks/${encodeURIComponent(id)}`, {
     cache: "no-store",
   });
 

@@ -9,11 +9,11 @@ export type NavItem = {
 };
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Browse", href: "/" },
-  { label: "Create Artwork", href: "/artworks/new" },
-  { label: "My Page", href: "/mypage" },
-  { label: "Reports / Help", href: "/ops-report-center" },
-  { label: "Help", href: "/help" },
+  { label: "작품 둘러보기", href: "/" },
+  { label: "작품 등록", href: "/sell/new" },
+  { label: "마이페이지", href: "/me" },
+  { label: "문의/신고", href: "/reports" },
+  { label: "도움말", href: "/help" },
 ];
 
 export type FooterColumn = {
@@ -25,9 +25,9 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
   {
     title: "회사",
     links: [
-      { label: "회사 소개", href: "/about" },
-      { label: "채용", href: "/careers" },
-      { label: "연락처", href: "/contact" },
+      { label: "About", href: "/about" },
+      { label: "Careers", href: "/careers" },
+      { label: "Contact", href: "/contact" },
     ],
   },
   {

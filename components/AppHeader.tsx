@@ -1,7 +1,4 @@
-"use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import * as React from "react";
 
 import { BRAND, NAV_ITEMS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -16,76 +13,6 @@ export type AppHeaderProps = {
 };
 
 export function AppHeader({ className, isAuthenticated, displayName }: AppHeaderProps) {
-  const router = useRouter();
-
-  // Determine auth state from prop first; if not provided, infer from localStorage token.
-  const [authed, setAuthed] = React.useState<boolean>(() => {
-    try {
-      if (typeof window === "undefined") return false;
-      if (typeof isAuthenticated === "boolean") return isAuthenticated;
-      return !!window.localStorage.getItem("pt_access_token");
-    } catch {
-      return false;
-    }
-  });
-
-  // Keep in sync when prop changes
-  React.useEffect(() => {
-    try {
-      if (typeof isAuthenticated === "boolean") setAuthed(isAuthenticated);
-      else setAuthed(!!window.localStorage.getItem("pt_access_token"));
-    } catch {
-      setAuthed(false);
-    }
-  }, [isAuthenticated]);
-
-  // Add an effect to update displayName from localStorage (if provided by login flow)
-  const [name, setName] = React.useState<string | undefined>(displayName);
-  React.useEffect(() => {
-    try {
-      const stored = typeof window !== "undefined" ? window.localStorage.getItem("pt_display_name") : null;
-      if (typeof displayName === "string") setName(displayName);
-      else if (stored) setName(stored);
-    } catch {
-      // ignore
-    }
-  }, [displayName]);
-
-  // Logout handler: remove tokens and redirect to home (or login)
-  function handleLogout(e?: React.MouseEvent) {
-    if (e) e.preventDefault();
-    try {
-      if (typeof window !== "undefined") {
-        window.localStorage.removeItem("pt_access_token");
-        window.localStorage.removeItem("pt_refresh_token");
-        window.localStorage.removeItem("pt_display_name");
-      }
-    } catch {
-      // ignore
-    }
-    setAuthed(false);
-    setName(undefined);
-    // navigate to home
-    router.push("/");
-  }
-
-  // Simple effect to listen to storage events so other tabs can update header
-  React.useEffect(() => {
-    function onStorage(e: StorageEvent) {
-      if (e.key === "pt_access_token") {
-        setAuthed(!!e.newValue);
-      }
-      if (e.key === "pt_display_name") {
-        setName(e.newValue ?? undefined);
-      }
-    }
-    if (typeof window !== "undefined") {
-      window.addEventListener("storage", onStorage);
-      return () => window.removeEventListener("storage", onStorage);
-    }
-    return () => {};
-  }, []);
-
   return (
     <header className={cn("border-b border-border bg-background", className)}>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -106,27 +33,27 @@ export function AppHeader({ className, isAuthenticated, displayName }: AppHeader
         </nav>
 
         <div className="flex items-center gap-2">
-          {authed ? (
+          {isAuthenticated ? (
             <>
-              {name ? (
+              {displayName ? (
                 <span className="hidden text-sm font-medium text-[color:var(--color-foreground)]/80 sm:inline">
-                  {name}님
+                  {displayName}님
                 </span>
               ) : null}
               <Button variant="outline" asChild>
-                <Link href="/mypage">My Page</Link>
+                <Link href="/mypage">마이페이지</Link>
               </Button>
-              <Button onClick={handleLogout} variant="ghost">
-                Logout
+              <Button asChild>
+                <Link href="/logout">로그아웃</Link>
               </Button>
             </>
           ) : (
             <>
               <Button variant="outline" asChild>
-                <Link href="/login">Login</Link>
+                <Link href="/login">로그인</Link>
               </Button>
               <Button asChild>
-                <Link href="/register">Sign up</Link>
+                <Link href="/register">회원가입</Link>
               </Button>
             </>
           )}

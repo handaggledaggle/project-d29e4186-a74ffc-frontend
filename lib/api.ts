@@ -5,38 +5,24 @@ export type ApiFetchOptions = Omit<RequestInit, "body"> & {
 };
 
 function getApiBaseUrl() {
-  // 기본: NEXT_PUBLIC_API_BASE_URL이 설정되어 있으면 해당 값을 사용
-  // 없으면 제공된 백엔드 URL을 기본으로 사용
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL || "https://backend-production-cdc4.up.railway.app";
+  // 기본: same-origin (Next Route Handler / reverse proxy)
+  // 필요 시 NEXT_PUBLIC_API_BASE_URL로 분리 가능
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL;
   if (!base) return "";
   return base.replace(/\/+$/, "");
 }
 
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<ApiResult<T>> {
-  // If caller provided a full URL, don't prepend base. Otherwise use base + path.
-  const isFullUrl = /^https?:\/\//i.test(path);
-  const base = getApiBaseUrl();
-  const url = isFullUrl ? path : `${base}${path.startsWith("/") ? path : `/${path}`}`;
+  const url = `${getApiBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
 
-  const headers = new Headers(options.headers as HeadersInit);
+  const headers = new Headers(options.headers);
   if (options.body !== undefined && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
-  }
-
-  // Attach authorization header from localStorage on client side if available
-  try {
-    if (typeof window !== "undefined") {
-      const token = window.localStorage.getItem("pt_access_token");
-      if (token) headers.set("Authorization", `Bearer ${token}`);
-    }
-  } catch {
-    // ignore
   }
 
   const res = await fetch(url, {
     ...options,
     headers,
-    // Next.js on the client requires the body to be string for JSON requests
     body:
       options.body === undefined
         ? undefined

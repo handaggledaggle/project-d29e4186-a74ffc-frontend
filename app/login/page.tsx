@@ -19,7 +19,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Note: backend controllers are under /api/v1/auth (see backend)
+      // Note: backend controllers are under /api/v1/auth
       const res = await apiFetch<{ access_token?: string; refresh_token?: string }>(
         "/api/v1/auth/login",
         {
@@ -41,6 +41,7 @@ export default function LoginPage() {
 
       if (accessToken) {
         try {
+          // store tokens in localStorage so apiFetch can attach Authorization header
           localStorage.setItem("pt_access_token", accessToken);
           if (refreshToken) localStorage.setItem("pt_refresh_token", refreshToken);
         } catch {

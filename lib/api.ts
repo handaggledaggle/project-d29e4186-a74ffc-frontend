@@ -18,9 +18,19 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   const base = getApiBaseUrl();
   const url = isFullUrl ? path : `${base}${path.startsWith("/") ? path : `/${path}`}`;
 
-  const headers = new Headers(options.headers);
+  const headers = new Headers(options.headers as HeadersInit);
   if (options.body !== undefined && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
+  }
+
+  // Attach authorization header from localStorage on client side if available
+  try {
+    if (typeof window !== "undefined") {
+      const token = window.localStorage.getItem("pt_access_token");
+      if (token) headers.set("Authorization", `Bearer ${token}`);
+    }
+  } catch {
+    // ignore
   }
 
   const res = await fetch(url, {

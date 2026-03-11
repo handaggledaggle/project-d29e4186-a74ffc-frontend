@@ -53,7 +53,8 @@ export function AppHeader({ className, isAuthenticated, displayName }: AppHeader
         <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
           {NAV_ITEMS.map((item) => (
             <Button key={item.href} variant="ghost" asChild>
-              <Link href={item.href} className="text-sm">
+              {/* Ensure hrefs are absolute routes within the app. NAV_ITEMS may contain named routes like 'home' or '/home' */}
+              <Link href={item.href.startsWith("/") ? item.href : `/${item.href}`} className="text-sm">
                 {item.label}
               </Link>
             </Button>

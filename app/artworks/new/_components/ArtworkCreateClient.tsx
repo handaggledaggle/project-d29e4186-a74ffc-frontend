@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { getSessionTokensClient } from "@/lib/auth";
 import type { ArtworkCreateResponse } from "@/types/artwork";
 
 export default function ArtworkCreateClient() {
@@ -55,13 +56,26 @@ export default function ArtworkCreateClient() {
         setLoading(true);
         setError(null);
 
+        // Ensure Authorization header is present for client-side calls.
+        // apiFetch already attempts to read tokens from server or client, but in some client
+        // environments (e.g., tokens stored in localStorage) we explicitly provide the header
+        // to avoid missing-auth issues.
+        const clientTokens = getSessionTokensClient();
+        const headers: Record<string, string> = {};
+        if (clientTokens?.accessToken) {
+          headers["Authorization"] = `Bearer ${clientTokens.accessToken}`;
+        }
+
         // Ensure correct API prefix used: /api/v1/artworks
         const res = await apiFetch<ArtworkCreateResponse>(`/api/v1/artworks`, {
           method: "POST",
           body: form,
+          // pass headers so apiFetch will include Authorization when available
+          headers,
         });
 
         if (!res.ok) {
+          // show backend-provided message when available
           setError(res.error?.message || "등록에 실패했습니다.");
           return;
         }

@@ -21,6 +21,9 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={inter.className}>
+        {/* AppShell is a client component that contains AppHeader and CartProvider.
+            Ensure AppShell is only mounted here to prevent duplicate headers when
+            pages/components also try to render headers. */}
         <AppShell>{children}</AppShell>
       </body>
     </html>

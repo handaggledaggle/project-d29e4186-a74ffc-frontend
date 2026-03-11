@@ -7,9 +7,13 @@ export type AppShellProps = {
   children: React.ReactNode;
 };
 
+// Mark as client to ensure hooks and localStorage usage inside AppHeader and CartProvider are allowed
+// and to prevent accidental multiple server/client nesting which can cause duplicated header renders
+"use client";
+
 export function AppShell({ children }: AppShellProps) {
-  // Provide client-side context (cart) and ensure AppHeader can react to client-side auth.
-  // AppHeader already reads localStorage token; keep it rendered on client by marking this component as client.
+  // Render a single AppHeader at top-level layout. Ensure AppShell is only used once (app/layout.tsx)
+  // and avoid rendering AppHeader inside page-level components.
   return (
     <div className="min-h-dvh bg-background text-foreground">
       <AppHeader />

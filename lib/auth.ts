@@ -11,6 +11,9 @@
   inside a try/catch and fall back to getSessionTokensClient() when the server-only import is not usable.
 */
 
+// IMPORTANT: keep this file server-safe for imports in server components, but also export
+// a pure-client fallback that does NOT import server-only modules when executed in the browser.
+
 import "server-only";
 import { cookies, headers } from "next/headers";
 

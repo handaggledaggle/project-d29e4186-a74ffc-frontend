@@ -1,7 +1,10 @@
 import type { ApiError, ApiResult } from "@/types";
+import { getSessionTokens } from "./auth";
 
 export type ApiFetchOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
+  // when true, include credentials (cookies) with fetch — useful for same-origin setups
+  includeCredentials?: boolean;
 };
 
 function getApiBaseUrl() {
@@ -20,7 +23,19 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     headers.set("Content-Type", "application/json");
   }
 
-  const res = await fetch(url, {
+  // Try to attach Authorization header from cookies (access token) when available.
+  // This supports both client-side calls and server-side client components (via lib/auth.getSessionTokens).
+  try {
+    const tokens = await getSessionTokens();
+    if (tokens?.accessToken) {
+      // Ensure standard Bearer format expected by backend guard
+      headers.set("Authorization", `Bearer ${tokens.accessToken}`);
+    }
+  } catch {
+    // getSessionTokens may throw in pure client env; ignore and proceed.
+  }
+
+  const fetchOptions: RequestInit = {
     ...options,
     headers,
     body:
@@ -29,7 +44,14 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
         : options.body instanceof FormData
           ? options.body
           : JSON.stringify(options.body),
-  });
+  };
+
+  // If caller explicitly asked to include credentials (cookies) — add credentials: 'include'
+  if (options.includeCredentials) {
+    fetchOptions.credentials = "include";
+  }
+
+  const res = await fetch(url, fetchOptions);
 
   const contentType = res.headers.get("content-type") || "";
   const isJson = contentType.includes("application/json");

@@ -45,7 +45,7 @@ export function AppHeader({ className, isAuthenticated, displayName }: AppHeader
     <header className={cn("border-b border-border bg-background", className)}>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-base font-bold text-[color:var(--color-foreground)]">
+          <Link href="/home" className="text-base font-bold text-[color:var(--color-foreground)]">
             {BRAND.name}
           </Link>
         </div>

@@ -8,12 +8,15 @@ export type NavItem = {
   href: string;
 };
 
+// Adjust NAV_ITEMS to point to actual routes present in the app.
+// Many pages use routes like /home, /artworks, /artworks/new, /mypage, /checkout, /login, /register
+// Update nav to reference those paths so header links navigate correctly.
 export const NAV_ITEMS: NavItem[] = [
-  { label: "작품 둘러보기", href: "/" },
-  { label: "작품 등록", href: "/sell/new" },
-  { label: "마이페이지", href: "/me" },
-  { label: "문의/신고", href: "/reports" },
-  { label: "도움말", href: "/help" },
+  { label: "홈", href: "/home" },
+  { label: "작품 둘러보기", href: "/artworks" },
+  { label: "작품 등록", href: "/artworks/new" },
+  { label: "마이페이지", href: "/mypage" },
+  { label: "문의/신고", href: "/ops-report-center" },
 ];
 
 export type FooterColumn = {

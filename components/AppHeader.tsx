@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -16,11 +18,12 @@ export type AppHeaderProps = {
 export function AppHeader({ className, isAuthenticated, displayName }: AppHeaderProps) {
   const router = useRouter();
 
-  // 로그아웃 동작: 로컬 스토리지의 토큰 제거 후 루트로 리디렉션
+  // 로그아웃 동작: 인증 유틸을 사용해 토큰 제거 후 루트로 리디렉션
   function handleLogout(e?: React.MouseEvent) {
     e?.preventDefault();
     try {
       if (typeof window !== "undefined") {
+        // 기존 프로젝트에서 사용하던 키에 맞춰 토큰 삭제
         localStorage.removeItem("pt_access_token");
         localStorage.removeItem("pt_refresh_token");
       }

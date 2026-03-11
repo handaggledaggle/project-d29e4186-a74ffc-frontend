@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
 import { Price } from "@/components/Price";
 import { Button } from "@/components/ui/button";
@@ -8,8 +9,11 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api";
 
 export default function ArtworkCreateClient() {
+  const router = useRouter();
+
   const [title, setTitle] = React.useState("꿈의 풍경");
   const [category, setCategory] = React.useState("회화 · 판화 · 사진 등 선택");
   const [description, setDescription] = React.useState(
@@ -19,12 +23,55 @@ export default function ArtworkCreateClient() {
   const [quantity, setQuantity] = React.useState<number | "">("");
 
   const [files, setFiles] = React.useState<File[]>([]);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: API 연동 (/api/v1/artworks)
-    // eslint-disable-next-line no-console
-    console.log({ title, category, description, price, quantity, files });
+    setError(null);
+    setSubmitting(true);
+
+    try {
+      const form = new FormData();
+      form.append("title", title);
+      form.append("description", description ?? "");
+      // category mapping: keep as-is string; backend accepts category string
+      if (category) form.append("category", category);
+      form.append("price", String(price ?? 0));
+      if (quantity !== "") form.append("quantity", String(quantity));
+
+      files.slice(0, 10).forEach((f, idx) => {
+        form.append("files", f, f.name ?? `file-${idx}`);
+      });
+
+      // Use apiFetch helper to call backend; endpoint must match controller @Controller('api/v1/artworks')
+      const res = await apiFetch<{ artwork_id: string }>("/api/v1/artworks", {
+        method: "POST",
+        body: form,
+        // Do not set Content-Type when sending FormData; apiFetch handles FormData bodies
+      });
+
+      if (!res.ok) {
+        setError(res.error.message || "등록 중 오류가 발생했습니다.");
+        setSubmitting(false);
+        return;
+      }
+
+      // On success, navigate to the new artwork detail page if artwork_id returned
+      const id = (res.data as any)?.artwork_id;
+      if (id) {
+        router.push(`/artworks/${encodeURIComponent(String(id))}`);
+      } else {
+        // fallback to artworks list
+        router.push(`/artworks`);
+      }
+    } catch (err: any) {
+      setError(err?.message ?? String(err));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -70,9 +117,9 @@ export default function ArtworkCreateClient() {
                     className="h-10 bg-white shadow-lg border border-[#DDD6FE] rounded-lg flex items-center px-3 text-[#4C1D95]"
                     role="button"
                     tabIndex={0}
-                    onClick={() => setCategory("회화 · 판화 · 사진")}
+                    onClick={() => setCategory("PAINTING")}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") setCategory("회화 · 판화 · 사진");
+                      if (e.key === "Enter" || e.key === " ") setCategory("PAINTING");
                     }}
                     aria-label="카테고리 선택"
                   >
@@ -162,16 +209,29 @@ export default function ArtworkCreateClient() {
                   type="button"
                   variant="secondary"
                   className="bg-[#FFFFFF] text-[#4C1D95] rounded-lg px-4 py-2 shadow-none hover:bg-[#FAF5FF]"
+                  onClick={() => {
+                    // simple local draft: save to localStorage
+                    try {
+                      const draft = { title, category, description, price, quantity };
+                      window.localStorage.setItem("artwork_draft_v1", JSON.stringify(draft));
+                      alert("임시저장되었습니다.");
+                    } catch {
+                      alert("임시저장에 실패했습니다.");
+                    }
+                  }}
                 >
                   임시저장
                 </Button>
                 <Button
                   type="submit"
                   className="bg-[#7C3AED] text-white rounded-lg px-6 py-2 hover:bg-[#6D28D9]"
+                  disabled={submitting}
                 >
-                  등록하기
+                  {submitting ? "등록 중…" : "등록하기"}
                 </Button>
               </div>
+
+              {error ? <p className="text-sm text-destructive mt-3">{error}</p> : null}
             </form>
           </Card>
 
@@ -189,6 +249,7 @@ export default function ArtworkCreateClient() {
               <div className="flex flex-col gap-3 mt-3">
                 <label className="h-36 bg-white shadow-lg border border-[#DDD6FE] rounded-lg flex items-center justify-center text-[#6D28D9] cursor-pointer">
                   <input
+                    ref={fileInputRef}
                     type="file"
                     className="hidden"
                     multiple
@@ -196,22 +257,34 @@ export default function ArtworkCreateClient() {
                     onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, 10))}
                     aria-label="이미지 업로드"
                   />
-                  이미지 드래그 앤 드롭 또는 클릭하여 업로드
+                  <div>
+                    <div>이미지 드래그 앤 드롭 또는 클릭하여 업로드</div>
+                    <div className="text-xs text-muted-foreground mt-2">5MB 이하, 권장 해상도 2000px 이상</div>
+                  </div>
                 </label>
 
                 <div className="flex gap-2">
-                  <div className="w-20 h-20 bg-white shadow-lg border border-[#DDD6FE] rounded-lg flex items-center justify-center text-[#6D28D9]">
-                    썸네일1
-                  </div>
-                  <div className="w-20 h-20 bg-white shadow-lg border border-[#DDD6FE] rounded-lg flex items-center justify-center text-[#6D28D9]">
-                    썸네일2
-                  </div>
-                  <div className="w-20 h-20 bg-white shadow-lg border border-[#DDD6FE] rounded-lg flex items-center justify-center text-[#6D28D9]">
-                    썸네일3
-                  </div>
-                  <div className="w-20 h-20 bg-white shadow-lg border border-[#DDD6FE] rounded-lg flex items-center justify-center text-[#6D28D9]">
-                    추가
-                  </div>
+                  {files.slice(0, 4).map((f, i) => (
+                    <div key={i} className="w-20 h-20 bg-white shadow-lg border border-[#DDD6FE] rounded-lg flex items-center justify-center text-[#6D28D9] overflow-hidden">
+                      <img src={URL.createObjectURL(f)} alt={f.name} className="object-cover w-full h-full" />
+                    </div>
+                  ))}
+                  {files.length === 0 ? (
+                    <>
+                      <div className="w-20 h-20 bg-white shadow-lg border border-[#DDD6FE] rounded-lg flex items-center justify-center text-[#6D28D9]">
+                        썸네일1
+                      </div>
+                      <div className="w-20 h-20 bg-white shadow-lg border border-[#DDD6FE] rounded-lg flex items-center justify-center text-[#6D28D9]">
+                        썸네일2
+                      </div>
+                      <div className="w-20 h-20 bg-white shadow-lg border border-[#DDD6FE] rounded-lg flex items-center justify-center text-[#6D28D9]">
+                        썸네일3
+                      </div>
+                      <div className="w-20 h-20 bg-white shadow-lg border border-[#DDD6FE] rounded-lg flex items-center justify-center text-[#6D28D9]">
+                        추가
+                      </div>
+                    </>
+                  ) : null}
                 </div>
 
                 <p className="text-[#6D28D9] text-sm">이미지는 5MB 이하, 권장 해상도 2000px 이상</p>

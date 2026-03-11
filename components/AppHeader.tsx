@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { BRAND, NAV_ITEMS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,23 @@ export type AppHeaderProps = {
 };
 
 export function AppHeader({ className, isAuthenticated, displayName }: AppHeaderProps) {
+  const router = useRouter();
+
+  // 로그아웃 동작: 로컬 스토리지의 토큰 제거 후 루트로 리디렉션
+  function handleLogout(e?: React.MouseEvent) {
+    e?.preventDefault();
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("pt_access_token");
+        localStorage.removeItem("pt_refresh_token");
+      }
+    } catch {
+      // ignore
+    }
+    // 클라이언트 라우트로 이동
+    router.push("/");
+  }
+
   return (
     <header className={cn("border-b border-border bg-background", className)}>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -43,8 +61,9 @@ export function AppHeader({ className, isAuthenticated, displayName }: AppHeader
               <Button variant="outline" asChild>
                 <Link href="/mypage">마이페이지</Link>
               </Button>
-              <Button asChild>
-                <Link href="/logout">로그아웃</Link>
+              {/* 로그아웃은 실제 동작을 위해 버튼의 onClick으로 처리합니다 */}
+              <Button onClick={handleLogout} variant="default">
+                로그아웃
               </Button>
             </>
           ) : (
